@@ -1,0 +1,8 @@
+.logo-box {
+	max-width: 70%;
+	border-bottom: 1px solid #2e303a;
+	margin: 7px;
+}
+.logo-box img {
+	width: 70%;
+}
