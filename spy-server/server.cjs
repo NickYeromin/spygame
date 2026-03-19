@@ -4,6 +4,7 @@ const readline = require("readline");
 const { Server } = require("socket.io");
 const { createServer } = require("http");
 const genCards = require("./module/genCards");
+const { socket } = require("../../Spy test/src/components/socket");
 
 const app = express();
 const server = createServer(app);
@@ -175,10 +176,11 @@ io.on("connection", (socket) => {
 	// ===== Voted players =====
 	socket.on("vote-ready", ({ roomID, voteReady }) => {
 		const room = rooms[roomID];
-		// const currentPlayers = room.players;
 
 		const player = room.players.find((p) => p.id === socket.id);
 		player.voteReady = voteReady;
+
+		votePlayers(roomID);
 	});
 });
 
@@ -244,6 +246,19 @@ function startRoundTimer(roomID) {
 function votePlayers(roomID) {
 	const room = rooms[roomID];
 	if (!room) return;
+
+	const currentPlayers = room.players;
+	const midleVotes = Math.round(currentPlayers.length / 2);
+	const readyVote = room.players.filter((p) => p.voteReady).length;
+	console.log(
+		`currPlayers->${currentPlayers.length}	|	midleVoters->${midleVotes}	|	readyVote->${readyVote}`,
+	);
+
+	if (readyVote >= midleVotes) {
+		//начинаем голосование
+		console.log("Игроки начали голосование!");
+		io.emit("vote-start", { currentPlayers });
+	}
 }
 
 // ================= COMMANDS =================

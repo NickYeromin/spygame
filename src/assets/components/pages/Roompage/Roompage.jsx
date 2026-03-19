@@ -11,7 +11,9 @@ export default function Roompage() {
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [roundTime, setRoundTime] = useState(null);
 	const [playerRole, setPlayerRole] = useState(null);
-	const [isVoteRedy, setIsVoteReady] = useState(false);
+	const [isVoteReady, setIsVoteReady] = useState(false);
+	const [isVote, setIsVote] = useState(false);
+	const [currentPlayers, setCurrentPlayers] = useState([]);
 
 	const { roomID } = useParams();
 
@@ -25,14 +27,21 @@ export default function Roompage() {
 		});
 	};
 
-	const handleVote = () => {
-		const newVoteReady = !isVoteRedy;
+	const handleVoteReady = () => {
+		const newVoteReady = !isVoteReady;
 		setIsVoteReady(newVoteReady);
 
 		socket.emit("vote-ready", {
 			roomID,
 			voteReady: newVoteReady,
 		});
+	};
+
+	const handleVote = (data) => {
+		console.log(data.currentPlayers);
+		setCurrentPlayers(data.currentPlayers);
+		setIsVote(true)
+		
 	};
 
 	const formatTime = (seconds) => {
@@ -75,6 +84,7 @@ export default function Roompage() {
 		socket.on("start-game", handleStartGame);
 		socket.on("round-time", handleRoundTime);
 		socket.on("role-assigned", handlePlayerRole);
+		socket.on("vote-start", handleVote);
 
 		// 🔥 правильный запрос игроков
 		socket.emit("get-room-players", { roomID });
@@ -84,6 +94,7 @@ export default function Roompage() {
 			socket.off("game-countdown", handleCountdown);
 			socket.off("start-game", handleStartGame);
 			socket.off("round-time", handleRoundTime);
+			socket.off("vote-start", handleVote);
 		};
 	}, [roomID]);
 
@@ -130,7 +141,15 @@ export default function Roompage() {
 				(playerRole === "spy" ? (
 					<button>Я знаю место</button>
 				) : (
-					<button onClick={handleVote}>Я знаю кто шпион</button>
+					<button onClick={handleVoteReady}>Я знаю кто шпион</button>
+				))}
+
+			{isVote &&
+				currentPlayers.map((player) => (
+					<div key={player.id}>
+						{" "}
+						<span>{player.username}</span> <button>Голосовать</button>{" "}
+					</div>
 				))}
 		</>
 	);
