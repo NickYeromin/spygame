@@ -96,7 +96,15 @@ io.on("connection", (socket) => {
 				return socket.emit("room-error", "Комната уже существует!");
 
 			rooms[roomID] = {
-				players: [{ id: socket.id, username, ready: false, role: null }],
+				players: [
+					{
+						id: socket.id,
+						username,
+						ready: false,
+						role: null,
+						voteReady: false,
+					},
+				],
 				hostID: socket.id,
 				numberPlayers,
 				numberSpy,
@@ -125,7 +133,13 @@ io.on("connection", (socket) => {
 		if (room.players.length >= room.numberPlayers)
 			return socket.emit("room-error", "Комната заполнена!");
 
-		room.players.push({ id: socket.id, username, ready: false, role: null });
+		room.players.push({
+			id: socket.id,
+			username,
+			ready: false,
+			role: null,
+			voteReady: false,
+		});
 		socket.join(roomID);
 
 		io.to(roomID).emit("room-players", room.players);
@@ -156,6 +170,15 @@ io.on("connection", (socket) => {
 			room.gameState === "waiting";
 
 		if (allReady) startCountdown(roomID);
+	});
+
+	// ===== Voted players =====
+	socket.on("vote-ready", ({ roomID, voteReady }) => {
+		const room = rooms[roomID];
+		// const currentPlayers = room.players;
+
+		const player = room.players.find((p) => p.id === socket.id);
+		player.voteReady = voteReady;
 	});
 });
 
@@ -218,6 +241,11 @@ function startRoundTimer(roomID) {
 	}, 1000);
 }
 
+function votePlayers(roomID) {
+	const room = rooms[roomID];
+	if (!room) return;
+}
+
 // ================= COMMANDS =================
 const rl = readline.createInterface({
 	input: process.stdin,
@@ -247,8 +275,9 @@ rl.on("line", (input) => {
 
 		case "room":
 			if (args[0] === "players" && args[1]) {
-				if (rooms[args[1]]) {console.log(rooms[args[1]].players)}
-				else console.log(`Комнаты #${args[1]} не существует!`)
+				if (rooms[args[1]]) {
+					console.log(rooms[args[1]].players);
+				} else console.log(`Комнаты #${args[1]} не существует!`);
 			}
 			break;
 

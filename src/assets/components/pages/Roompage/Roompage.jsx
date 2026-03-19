@@ -10,7 +10,8 @@ export default function Roompage() {
 	const [countdown, setCountdown] = useState(null);
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [roundTime, setRoundTime] = useState(null);
-	const [playerRole,setPlayerRole] = useState(null)
+	const [playerRole, setPlayerRole] = useState(null);
+	const [isVoteRedy, setIsVoteReady] = useState(false);
 
 	const { roomID } = useParams();
 
@@ -21,6 +22,16 @@ export default function Roompage() {
 		socket.emit("player-ready", {
 			roomID,
 			ready: newReady,
+		});
+	};
+
+	const handleVote = () => {
+		const newVoteReady = !isVoteRedy;
+		setIsVoteReady(newVoteReady);
+
+		socket.emit("vote-ready", {
+			roomID,
+			voteReady: newVoteReady,
 		});
 	};
 
@@ -55,15 +66,15 @@ export default function Roompage() {
 			setRoundTime(time);
 		};
 
-		const handlePlayerRole = (role)=>{
-			setPlayerRole(role)
-		}
+		const handlePlayerRole = (role) => {
+			setPlayerRole(role);
+		};
 
 		socket.on("room-players", handleRoomPlayers);
 		socket.on("game-countdown", handleCountdown);
 		socket.on("start-game", handleStartGame);
-		socket.on("round-time", handleRoundTime)
-		socket.on('role-assigned',handlePlayerRole);
+		socket.on("round-time", handleRoundTime);
+		socket.on("role-assigned", handlePlayerRole);
 
 		// 🔥 правильный запрос игроков
 		socket.emit("get-room-players", { roomID });
@@ -114,6 +125,13 @@ export default function Roompage() {
 			)}
 
 			{isPlaying && <Card role={playerRole} />}
+
+			{isPlaying &&
+				(playerRole === "spy" ? (
+					<button>Я знаю место</button>
+				) : (
+					<button onClick={handleVote}>Я знаю кто шпион</button>
+				))}
 		</>
 	);
 }
