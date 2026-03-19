@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Logo from "../../Logo/Logo";
 import { useNavigate } from "react-router-dom";
 import { socket } from "../../api/socket";
-import { useEffect } from "react";
 
 export default function Connectpage() {
 	const [roomID, setRoomID] = useState("");
@@ -12,37 +11,42 @@ export default function Connectpage() {
 
 	const handlerConnect = (e) => {
 		e.preventDefault();
+
+		if (!username) return alert("Сначала войдите!");
 		if (!roomID.trim()) return alert("Введите код комнаты!");
-		socket.emit("join-room", { roomID: roomID, username });
+
+		socket.emit("join-room", {
+			roomID: roomID.trim(),
+		});
 	};
 
 	useEffect(() => {
-		socket.on("room-joined", (roomID) => {
-			console.log("Успешный вход:", roomID);
+		const onJoin = (roomID) => {
 			navigate(`/room/${roomID}`);
-		});
+		};
 
-		socket.on("room-error", (message) => {
+		const onError = (message) => {
 			alert(message);
-		});
+		};
+
+		socket.on("room-joined", onJoin);
+		socket.on("room-error", onError);
 
 		return () => {
-			socket.off("room-error");
-			socket.off("");
+			socket.off("room-joined", onJoin);
+			socket.off("room-error", onError);
 		};
-	}, []);
+	}, [navigate]);
 
 	return (
 		<>
 			<Logo />
 			<form onSubmit={handlerConnect}>
 				<input
-					type="number"
+					type="text"
 					placeholder="Введите код комнаты"
 					value={roomID}
-					onChange={(e) => {
-						setRoomID(e.target.value);
-					}}
+					onChange={(e) => setRoomID(e.target.value)}
 				/>
 				<button type="submit">Подключиться</button>
 			</form>

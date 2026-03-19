@@ -7,16 +7,23 @@ export default function Roompage() {
 	const [roomPlayers, setRoomPlayers] = useState([]);
 	const [isReady, setIsReady] = useState(false);
 	const [countdown, setCountdown] = useState(null);
+	const [isPlaying, setIsPlaying] = useState(false);
+	const [roundTime, setRoundTime] = useState(null);
 
 	const { roomID } = useParams();
 
 	const handleReady = () => {
 		const newReady = !isReady;
 		setIsReady(newReady);
-		socket.emit("player-ready", { roomID, ready: newReady });
+
+		socket.emit("player-ready", {
+			roomID,
+			ready: newReady,
+		});
 	};
 
 	const formatTime = (seconds) => {
+		if (seconds == null) return "";
 		const m = Math.floor(seconds / 60)
 			.toString()
 			.padStart(2, "0");
@@ -26,38 +33,75 @@ export default function Roompage() {
 
 	useEffect(() => {
 		const handleRoomPlayers = (players) => {
-			console.log("Обновление списка игроков:", players);
 			setRoomPlayers(players);
+
+			// синхронизация ready состояния
+			const me = players.find((p) => p.id === socket.id);
+			if (me) setIsReady(me.ready);
 		};
-		const handleCountdown = (time) => setCountdown(time);
+
+		const handleCountdown = (time) => {
+			setCountdown(time);
+		};
+
+		const handleStartGame = () => {
+			setIsPlaying(true);
+		};
+
+		const handleRoundTime = (time) => {
+			setRoundTime(time);
+		};
 
 		socket.on("room-players", handleRoomPlayers);
 		socket.on("game-countdown", handleCountdown);
+		socket.on("start-game", handleStartGame);
+		socket.on("round-time", handleRoundTime);
 
-		// Получаем текущий список игроков сразу при подключении
+		// 🔥 правильный запрос игроков
 		socket.emit("get-room-players", { roomID });
 
 		return () => {
 			socket.off("room-players", handleRoomPlayers);
 			socket.off("game-countdown", handleCountdown);
+			socket.off("start-game", handleStartGame);
+			socket.off("round-time", handleRoundTime);
 		};
-	}, [roomID, roomPlayers, countdown]);
+	}, [roomID]);
 
 	return (
 		<>
 			<h2>Комната #{roomID}</h2>
-			{countdown !== null ? (
-				<span>Игра начнется через:{countdown}</span>
+
+			{isPlaying ? (
+				<span className="green">Игра идёт</span>
 			) : (
-				<span>ОЖИДАЕМ ИГРОКОВ</span>
+				<span className="red">Ожидание</span>
 			)}
-			<span>Игроки:</span>
-			{roomPlayers.map((player) => (
-				<li key={player.id} className={player.ready === true ? "green" : "red"}>
-					{player.username}
-				</li>
-			))}
-			<button onClick={handleReady}>Готов</button>
+
+			<br />
+
+			{countdown !== null && !isPlaying && (
+				<span>Игра начнётся через: {countdown}</span>
+			)}
+
+			{isPlaying && roundTime !== null && (
+				<span>Осталось времени: {formatTime(roundTime)}</span>
+			)}
+
+			<h3>Игроки:</h3>
+			<ul>
+				{roomPlayers.map((player) => (
+					<li key={player.id} className={player.ready ? "green" : "red"}>
+						{player.username}
+					</li>
+				))}
+			</ul>
+
+			{!isPlaying && (
+				<button onClick={handleReady}>
+					{isReady ? "Отменить готовность" : "Готов"}
+				</button>
+			)}
 		</>
 	);
 }
