@@ -1,0 +1,23 @@
+[33mcommit 4628180f0a79aebeb5b19fa0010887d9e7556e2a[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m
+Author: NickYeriomin <homa.chups@gmail.com>
+Date:   Thu Mar 19 05:35:09 2026 +0200
+
+    0.3 fixed little bugs
+
+[33mcommit 069e574a81fbcad2ef434df2f65847e2d88929a3[m
+Author: NickYeriomin <homa.chups@gmail.com>
+Date:   Thu Mar 19 05:15:31 2026 +0200
+
+    0.2 fixed bugs round time
+
+[33mcommit 76ad6bfc4d1513ffd5cb5eeb5a9aec97aa8c988e[m
+Author: NickYeriomin <homa.chups@gmail.com>
+Date:   Thu Mar 19 04:47:29 2026 +0200
+
+    0.1 fixed bugs: timer and player list
+
+[33mcommit 690d4ffd864ffcad9b6e48f3bbbf473fb2dcb289[m
+Author: NickYeriomin <homa.chups@gmail.com>
+Date:   Wed Mar 18 20:37:30 2026 +0200
+
+    Initial first commit

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { socket } from "../../api/socket";
 import "./Roompage.css";
+import Card from "../../Card/Card";
 
 export default function Roompage() {
 	const [roomPlayers, setRoomPlayers] = useState([]);
@@ -9,6 +10,7 @@ export default function Roompage() {
 	const [countdown, setCountdown] = useState(null);
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [roundTime, setRoundTime] = useState(null);
+	const [playerRole,setPlayerRole] = useState(null)
 
 	const { roomID } = useParams();
 
@@ -42,7 +44,7 @@ export default function Roompage() {
 
 		const handleCountdown = (time) => {
 			setCountdown(time);
-			if(time<= 0) setIsPlaying(true)
+			if (time <= 0) setIsPlaying(true);
 		};
 
 		const handleStartGame = () => {
@@ -53,10 +55,15 @@ export default function Roompage() {
 			setRoundTime(time);
 		};
 
+		const handlePlayerRole = (role)=>{
+			setPlayerRole(role)
+		}
+
 		socket.on("room-players", handleRoomPlayers);
 		socket.on("game-countdown", handleCountdown);
 		socket.on("start-game", handleStartGame);
-		socket.on("round-time", handleRoundTime);
+		socket.on("round-time", handleRoundTime)
+		socket.on('role-assigned',handlePlayerRole);
 
 		// 🔥 правильный запрос игроков
 		socket.emit("get-room-players", { roomID });
@@ -89,20 +96,24 @@ export default function Roompage() {
 				<span>Осталось времени: {formatTime(roundTime)}</span>
 			)}
 
-			<h3>Игроки:</h3>
-			<ul>
-				{roomPlayers.map((player) => (
-					<li key={player.id} className={player.ready ? "green" : "red"}>
-						{player.username}
-					</li>
-				))}
-			</ul>
+			{!isPlaying && <h3>Игроки:</h3>}
+			{!isPlaying && (
+				<ul>
+					{roomPlayers.map((player) => (
+						<li key={player.id} className={player.ready ? "green" : "red"}>
+							{player.username}
+						</li>
+					))}
+				</ul>
+			)}
 
 			{!isPlaying && (
 				<button onClick={handleReady}>
 					{isReady ? "Отменить готовность" : "Готов"}
 				</button>
 			)}
+
+			{isPlaying && <Card role={playerRole} />}
 		</>
 	);
 }
