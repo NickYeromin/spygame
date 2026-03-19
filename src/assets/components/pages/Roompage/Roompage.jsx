@@ -42,6 +42,7 @@ export default function Roompage() {
 
 		const handleCountdown = (time) => {
 			setCountdown(time);
+			if(time<= 0) setIsPlaying(true)
 		};
 
 		const handleStartGame = () => {

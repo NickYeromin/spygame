@@ -23,18 +23,26 @@ app.get("/", (req, res) => {
 	res.send("<h1>SPY-SERVER</h1>");
 });
 
+const colors = {
+	//for logs
+	reset: "\x1b[0m",
+	red: "\x1b[31m",
+	green: "\x1b[32m",
+	yellow: "\x1b[33m",
+	blue: "\x1b[34m",
+};
+
 const users = {};
 const rooms = {};
 
 // ================= SOCKET =================
 io.on("connection", (socket) => {
-
 	// ===== LOGIN =====
 	socket.on("join", ({ username }) => {
 		if (!username) return;
 
 		const isDuplicate = Object.values(users).some(
-			(name) => name.toLowerCase() === username.toLowerCase()
+			(name) => name.toLowerCase() === username.toLowerCase(),
 		);
 
 		if (isDuplicate) {
@@ -45,6 +53,7 @@ io.on("connection", (socket) => {
 		users[socket.id] = username;
 		socket.emit("login-success", username);
 		io.emit("users", Object.values(users));
+		console.log(`Игрок "${username}" авторизовался!`)
 	});
 
 	// ===== DISCONNECT =====
@@ -55,7 +64,7 @@ io.on("connection", (socket) => {
 		for (const roomID in rooms) {
 			const room = rooms[roomID];
 
-			const index = room.players.findIndex(p => p.id === socket.id);
+			const index = room.players.findIndex((p) => p.id === socket.id);
 
 			if (index !== -1) {
 				room.players.splice(index, 1);
@@ -72,32 +81,38 @@ io.on("connection", (socket) => {
 		}
 
 		io.emit("users", Object.values(users));
+		console.log(`Игрок "${username}" покинул игру!`)
 	});
 
 	// ===== CREATE ROOM =====
-	socket.on("create-room", ({ roomID, numberPlayers, numberSpy, timeRound, location }) => {
-		const username = users[socket.id];
-		if (!username) return socket.emit("room-error", "Вы не авторизованы!");
+	socket.on(
+		"create-room",
+		({ roomID, numberPlayers, numberSpy, timeRound, location }) => {
+			const username = users[socket.id];
+			if (!username) return socket.emit("room-error", "Вы не авторизованы!");
 
-		if (rooms[roomID]) return socket.emit("room-error", "Комната уже существует!");
+			if (rooms[roomID])
+				return socket.emit("room-error", "Комната уже существует!");
 
-		rooms[roomID] = {
-			players: [{ id: socket.id, username, ready: false, role: null }],
-			hostID: socket.id,
-			numberPlayers,
-			numberSpy,
-			roundTime: timeRound,
-			location,
-			gameState: "waiting",
-			countdownTimer: null,
-			roundTimer: null,
-			currentCountdown: null,
-		};
+			rooms[roomID] = {
+				players: [{ id: socket.id, username, ready: false, role: null }],
+				hostID: socket.id,
+				numberPlayers,
+				numberSpy,
+				roundTime: timeRound,
+				location,
+				gameState: "waiting",
+				countdownTimer: null,
+				roundTimer: null,
+				currentCountdown: null,
+			};
 
-		socket.join(roomID);
-		io.to(roomID).emit("room-players", rooms[roomID].players);
-		socket.emit("room-created", roomID);
-	});
+			socket.join(roomID);
+			io.to(roomID).emit("room-players", rooms[roomID].players);
+			socket.emit("room-created", roomID);
+			console.log(`Игрок "${username}" создал комнату #${roomID}!`)
+		},
+	);
 
 	// ===== JOIN ROOM =====
 	socket.on("join-room", ({ roomID }) => {
@@ -120,6 +135,7 @@ io.on("connection", (socket) => {
 		}
 
 		socket.emit("room-joined", roomID);
+		console.log(`Игрок "${username}" вошел в комнату #${roomID}`)
 	});
 
 	// ===== READY =====
@@ -127,7 +143,7 @@ io.on("connection", (socket) => {
 		const room = rooms[roomID];
 		if (!room) return;
 
-		const player = room.players.find(p => p.id === socket.id);
+		const player = room.players.find((p) => p.id === socket.id);
 		if (!player) return;
 
 		player.ready = ready;
@@ -135,7 +151,7 @@ io.on("connection", (socket) => {
 
 		const allReady =
 			room.players.length === room.numberPlayers &&
-			room.players.every(p => p.ready) &&
+			room.players.every((p) => p.ready) &&
 			room.gameState === "waiting";
 
 		if (allReady) startCountdown(roomID);
@@ -234,5 +250,11 @@ rl.on("line", (input) => {
 });
 
 server.listen(port, "0.0.0.0", () => {
-	console.log(`Server running on http://localhost:${port}`);
+	console.log(
+		colors.yellow +
+			`✅ Server running at:` +
+			colors.green +
+			`\n-> http://0.0.0.0:${port}\n-> http://localhost:${port}\n-> http://192.168.0.202:${port}` +
+			colors.reset,
+	);
 });
