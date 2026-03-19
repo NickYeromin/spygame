@@ -53,7 +53,7 @@ io.on("connection", (socket) => {
 		users[socket.id] = username;
 		socket.emit("login-success", username);
 		io.emit("users", Object.values(users));
-		console.log(`Игрок "${username}" авторизовался!`)
+		console.log(`Игрок "${username}" авторизовался!`);
 	});
 
 	// ===== DISCONNECT =====
@@ -81,7 +81,8 @@ io.on("connection", (socket) => {
 		}
 
 		io.emit("users", Object.values(users));
-		console.log(`Игрок "${username}" покинул игру!`)
+		if (username !== undefined)
+			console.log(`Игрок "${username}" покинул игру!`);
 	});
 
 	// ===== CREATE ROOM =====
@@ -110,7 +111,7 @@ io.on("connection", (socket) => {
 			socket.join(roomID);
 			io.to(roomID).emit("room-players", rooms[roomID].players);
 			socket.emit("room-created", roomID);
-			console.log(`Игрок "${username}" создал комнату #${roomID}!`)
+			console.log(`Игрок "${username}" создал комнату #${roomID}!`);
 		},
 	);
 
@@ -135,7 +136,7 @@ io.on("connection", (socket) => {
 		}
 
 		socket.emit("room-joined", roomID);
-		console.log(`Игрок "${username}" вошел в комнату #${roomID}`)
+		console.log(`Игрок "${username}" вошел в комнату #${roomID}`);
 	});
 
 	// ===== READY =====
@@ -242,6 +243,13 @@ rl.on("line", (input) => {
 
 		case "rooms":
 			console.log(rooms);
+			break;
+
+		case "room":
+			if (args[0] === "players" && args[1]) {
+				if (rooms[args[1]]) {console.log(rooms[args[1]].players)}
+				else console.log(`Комнаты #${args[1]} не существует!`)
+			}
 			break;
 
 		default:
