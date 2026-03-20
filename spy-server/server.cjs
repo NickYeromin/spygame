@@ -115,6 +115,7 @@ io.on("connection", (socket) => {
 				countdownTimer: null,
 				roundTimer: null,
 				currentCountdown: null,
+				votePlayers: {},
 			};
 
 			socket.join(roomID);
@@ -176,11 +177,55 @@ io.on("connection", (socket) => {
 	// ===== Voted players =====
 	socket.on("vote-ready", ({ roomID, voteReady }) => {
 		const room = rooms[roomID];
+		if (!room) return socket.emit("room-error", "Комната не найдена!");
+
+		const username = users[socket.id];
+		if (!username) return socket.emit("room-error", "Вы авторизованы!");
 
 		const player = room.players.find((p) => p.id === socket.id);
+		if (!player) return socket.emit("room-error", "Игрок не найден в комнате!");
+
 		player.voteReady = voteReady;
 
 		votePlayers(roomID);
+	});
+
+	socket.on("vote-select", ({ roomID, playerID }) => {
+		const room = rooms[roomID];
+		if (!room) return;
+
+		const username = users[socket.id];
+		if (!username) return socket.emit("room-error", "Вы не авторизованы!");
+
+		const player = room.players.find((p) => p.id === socket.id);
+		if (!player) return socket.emit("room-error", "Игрок не найден в комнате!");
+
+		const currentPlayers = room.players;
+
+		room.votePlayers[users[playerID]] += 1;
+
+		let currVoteCount = 0;
+		for (let key of Object.keys(room.votePlayers)) {
+			currVoteCount += room.votePlayers[key];
+		}
+
+		if (currVoteCount === currentPlayers.length) // если проголосовали все
+		{
+			const maxVotes = Math.max(...Object.values(room.votePlayers));
+			const winners = Object.keys(room.votePlayers).filter(
+				(key) => room.votePlayers[key] === maxVotes,
+			);
+			if ((winners.length = 1)) {
+				io.to(roomID).emit("vote-kick", winners[0]);
+				room.votePlayers = {};
+				room.players = room.players.filter(
+					(player) => player.username !== winners[0],
+				);
+				console.log(`Игроки выгнали ${winners[0]} из комнаты.`);
+			} else if (winners.length > 1) {
+				io.to(roomID).emit("vote-kick");
+			}
+		}
 	});
 });
 
@@ -250,9 +295,12 @@ function votePlayers(roomID) {
 	const currentPlayers = room.players;
 	const midleVotes = Math.round(currentPlayers.length / 2);
 	const readyVote = room.players.filter((p) => p.voteReady).length;
-	console.log(
-		`currPlayers->${currentPlayers.length}	|	midleVoters->${midleVotes}	|	readyVote->${readyVote}`,
-	);
+	// console.log(
+	// 	`currPlayers->${currentPlayers.length}	|	midleVoters->${midleVotes}	|	readyVote->${readyVote}`,
+	// );
+	for (const player of currentPlayers) {
+		room.votePlayers[player.username] = 0;
+	}
 
 	if (readyVote >= midleVotes) {
 		//начинаем голосование
@@ -288,13 +336,28 @@ rl.on("line", (input) => {
 			console.log(rooms);
 			break;
 
-		case "room":
-			if (args[0] === "players" && args[1]) {
-				if (rooms[args[1]]) {
-					console.log(rooms[args[1]].players);
-				} else console.log(`Комнаты #${args[1]} не существует!`);
+		case "room": {
+			const roomID = args[1];
+			const room = rooms[roomID];
+
+			if (!room) {
+				console.log(`Комнаты #${roomID} не существует!`);
+				break;
 			}
+
+			switch (args[0]) {
+				case "players":
+					console.log(room.players);
+					break;
+				case "vote":
+					console.log(room.votePlayers || []);
+					break;
+				default:
+					console.log(`Неизвестная команда: ${args[0]}`);
+			}
+
 			break;
+		}
 
 		default:
 			console.log("Unknown command ❌");

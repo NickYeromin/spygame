@@ -40,8 +40,11 @@ export default function Roompage() {
 	const handleVote = (data) => {
 		console.log(data.currentPlayers);
 		setCurrentPlayers(data.currentPlayers);
-		setIsVote(true)
-		
+		setIsVote(true);
+	};
+
+	const handleVoteSelectPlayer = (playerID) => {
+		socket.emit("vote-select", { roomID, playerID });
 	};
 
 	const formatTime = (seconds) => {
@@ -85,6 +88,13 @@ export default function Roompage() {
 		socket.on("round-time", handleRoundTime);
 		socket.on("role-assigned", handlePlayerRole);
 		socket.on("vote-start", handleVote);
+		socket.on("vote-kick", (data) => {
+			console.log("Ирок выгнан!", data);
+			setIsVote(false)
+		});
+		socket.on("room-error", (message) => {
+			alert(message);
+		});
 
 		// 🔥 правильный запрос игроков
 		socket.emit("get-room-players", { roomID });
@@ -95,6 +105,8 @@ export default function Roompage() {
 			socket.off("start-game", handleStartGame);
 			socket.off("round-time", handleRoundTime);
 			socket.off("vote-start", handleVote);
+			socket.off("vote-kick");
+			socket.off("room-error");
 		};
 	}, [roomID]);
 
@@ -148,7 +160,10 @@ export default function Roompage() {
 				currentPlayers.map((player) => (
 					<div key={player.id}>
 						{" "}
-						<span>{player.username}</span> <button>Голосовать</button>{" "}
+						<span>{player.username}</span>{" "}
+						<button onClick={() => handleVoteSelectPlayer(player.id)}>
+							Выбрать
+						</button>{" "}
 					</div>
 				))}
 		</>
