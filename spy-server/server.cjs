@@ -215,7 +215,7 @@ io.on("connection", (socket) => {
 			const winners = Object.keys(room.votePlayers).filter(
 				(key) => room.votePlayers[key] === maxVotes,
 			);
-			if ((winners.length = 1)) {
+			if (winners.length === 1) {
 				io.to(roomID).emit("vote-kick", winners[0]);
 				room.votePlayers = {};
 				room.players = room.players.filter(
@@ -223,7 +223,9 @@ io.on("connection", (socket) => {
 				);
 				console.log(`Игроки выгнали ${winners[0]} из комнаты.`);
 			} else if (winners.length > 1) {
-				io.to(roomID).emit("vote-kick");
+				io.to(roomID).emit("vote-message",'Игроки не смогли определиться кого выгнать.');
+				room.votePlayers = {};
+				console.log('Игроки не смогли определиться кого выгнать.')
 			}
 		}
 	});

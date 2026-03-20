@@ -14,6 +14,7 @@ export default function Roompage() {
 	const [isVoteReady, setIsVoteReady] = useState(false);
 	const [isVote, setIsVote] = useState(false);
 	const [currentPlayers, setCurrentPlayers] = useState([]);
+	const [message,setMessage] = useState('')
 
 	const { roomID } = useParams();
 
@@ -90,7 +91,11 @@ export default function Roompage() {
 		socket.on("vote-start", handleVote);
 		socket.on("vote-kick", (data) => {
 			console.log("Ирок выгнан!", data);
+			alert(`Результат голосования! \n Игрок ${data} выбыл из игры!`)
 			setIsVote(false)
+		});
+		socket.on("vote-message", (message) => {
+			alert(message);
 		});
 		socket.on("room-error", (message) => {
 			alert(message);
