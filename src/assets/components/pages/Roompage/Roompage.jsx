@@ -14,7 +14,8 @@ export default function Roompage() {
 	const [isVoteReady, setIsVoteReady] = useState(false);
 	const [isVote, setIsVote] = useState(false);
 	const [currentPlayers, setCurrentPlayers] = useState([]);
-	const [message,setMessage] = useState('')
+	const [message, setMessage] = useState("");
+	const [isGameOver, setIsGameOver] = useState(false);
 
 	const { roomID } = useParams();
 
@@ -46,6 +47,7 @@ export default function Roompage() {
 
 	const handleVoteSelectPlayer = (playerID) => {
 		socket.emit("vote-select", { roomID, playerID });
+		setIsVote(false);
 	};
 
 	const formatTime = (seconds) => {
@@ -91,14 +93,19 @@ export default function Roompage() {
 		socket.on("vote-start", handleVote);
 		socket.on("vote-kick", (data) => {
 			console.log("Ирок выгнан!", data);
-			alert(`Результат голосования! \n Игрок ${data} выбыл из игры!`)
-			setIsVote(false)
+			alert(`Результат голосования! \n Игрок ${data} выбыл из игры!`);
+			setIsVote(false);
 		});
 		socket.on("vote-message", (message) => {
 			alert(message);
+			setIsVote(false);
 		});
 		socket.on("room-error", (message) => {
 			alert(message);
+		});
+		socket.on("game-over", (message) => {
+			alert(message);
+			setIsGameOver(true);
 		});
 
 		// 🔥 правильный запрос игроков
@@ -112,27 +119,32 @@ export default function Roompage() {
 			socket.off("vote-start", handleVote);
 			socket.off("vote-kick");
 			socket.off("room-error");
+			socket.off("game-over");
 		};
 	}, [roomID]);
 
 	return (
 		<>
 			<h2>Комната #{roomID}</h2>
-
-			{isPlaying ? (
+			{!isGameOver && (isPlaying ? (
 				<span className="green">Игра идёт</span>
 			) : (
 				<span className="red">Ожидание</span>
-			)}
-
+			))}
+			{/* {isPlaying ? (
+				<span className="green">Игра идёт</span>
+			) : (
+				<span className="red">Ожидание</span>
+			)} */}
+			{isGameOver && <span className="red">Игра окончена!</span>}
 			<br />
 
 			{countdown !== null && !isPlaying && (
 				<span>Игра начнётся через: {countdown}</span>
 			)}
 
-			{isPlaying && roundTime !== null && (
-				<span>Осталось времени: {formatTime(roundTime)}</span>
+			{!isGameOver && isPlaying && roundTime !== null && (
+				<span className="green">Осталось времени: {formatTime(roundTime)}</span>
 			)}
 
 			{!isPlaying && <h3>Игроки:</h3>}
@@ -153,13 +165,13 @@ export default function Roompage() {
 			)}
 
 			{isPlaying && <Card role={playerRole} />}
+			{playerRole === "spy" ? <button>Я знаю место</button> : null}
 
-			{isPlaying &&
-				(playerRole === "spy" ? (
-					<button>Я знаю место</button>
-				) : (
-					<button onClick={handleVoteReady}>Я знаю кто шпион</button>
-				))}
+			{isPlaying && (
+				<button onClick={handleVoteReady} disabled={isVote ? true : false}>
+					Я знаю кто шпион
+				</button>
+			)}
 
 			{isVote &&
 				currentPlayers.map((player) => (

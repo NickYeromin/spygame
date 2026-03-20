@@ -222,10 +222,39 @@ io.on("connection", (socket) => {
 					(player) => player.username !== winners[0],
 				);
 				console.log(`Игроки выгнали ${winners[0]} из комнаты.`);
+
+				const currNumberPlayers = room.players.length;
+				const currSpy = room.players.filter(
+					(player) => player.role === "spy",
+				).length;
+				const currPlayers = room.players.filter(
+					(player) => player.role === "player",
+				).length;
+
+				console.log(
+					`numPlayers:${currNumberPlayers} | currSpy:${currSpy} | currPlayers:${currPlayers}`,
+				);
+
+				if (currSpy === 0 && currPlayers > 1) {
+					console.log(`Room #${roomID} game over! Players win`);
+					room.gameState = "game-over";
+					io.to(roomID).emit("game-over", 'Игра окончена! \n Победа "Игроки"');
+				} else if (currSpy === 1 && currPlayers === 1) {
+					console.log(`Room #${roomID} game over! Spy win`);
+					room.gameState = "game-over";
+					io.to(roomID).emit("game-over", 'Игра окончена! \n Победа "Шпионы"');
+				} else if (currSpy > currPlayers) {
+					console.log(`Room #${roomID} game over! Spy win`);
+					room.gameState = "game-over";
+					io.to(roomID).emit("game-over", 'Игра окончена! \n Победа "Шпионы"');
+				}
 			} else if (winners.length > 1) {
-				io.to(roomID).emit("vote-message",'Игроки не смогли определиться кого выгнать.');
+				io.to(roomID).emit(
+					"vote-message",
+					"Игроки не смогли определиться кого выгнать.",
+				);
 				room.votePlayers = {};
-				console.log('Игроки не смогли определиться кого выгнать.')
+				console.log("Игроки не смогли определиться кого выгнать.");
 			}
 		}
 	});
@@ -285,7 +314,7 @@ function startRoundTimer(roomID) {
 		if (timeLeft < 0) {
 			clearInterval(room.roundTimer);
 			room.gameState = "finished";
-			io.to(roomID).emit("game-over");
+			io.to(roomID).emit("game-over", 'Время закончилось! \n Победа "Шпионы"');
 		}
 	}, 1000);
 }
