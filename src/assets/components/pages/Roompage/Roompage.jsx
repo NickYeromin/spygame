@@ -10,14 +10,16 @@ export default function Roompage() {
 	const [countdown, setCountdown] = useState(null);
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [roundTime, setRoundTime] = useState(null);
+	const [dataLocation, setDataLocation] = useState(null);
 	const [playerRole, setPlayerRole] = useState(null);
 	const [isVoteReady, setIsVoteReady] = useState(false);
 	const [isVote, setIsVote] = useState(false);
 	const [currentPlayers, setCurrentPlayers] = useState([]);
-	const [message, setMessage] = useState("");
+	const [message, setMessage] = useState(""); //!
 	const [isGameOver, setIsGameOver] = useState(false);
 
 	const { roomID } = useParams();
+	const username = sessionStorage.getItem("username");
 
 	const handleReady = () => {
 		const newReady = !isReady;
@@ -89,11 +91,22 @@ export default function Roompage() {
 		socket.on("game-countdown", handleCountdown);
 		socket.on("start-game", handleStartGame);
 		socket.on("round-time", handleRoundTime);
+		socket.on("location-assigned", (data) => {
+			setDataLocation(data);
+			console.log(data);
+		}); //!
 		socket.on("role-assigned", handlePlayerRole);
 		socket.on("vote-start", handleVote);
 		socket.on("vote-kick", (data) => {
+			//Если я тогда...
 			console.log("Ирок выгнан!", data);
-			alert(`Результат голосования! \n Игрок ${data} выбыл из игры!`);
+			if (data === username) {
+				setIsGameOver(true);
+				alert(`Результат голосования! \n ${data}, вы выбываете!`);
+			} else {
+				alert(`Результат голосования! \n Игрок ${data} выбыл из игры!`);
+			}
+
 			setIsVote(false);
 		});
 		socket.on("vote-message", (message) => {
@@ -115,6 +128,7 @@ export default function Roompage() {
 			socket.off("room-players", handleRoomPlayers);
 			socket.off("game-countdown", handleCountdown);
 			socket.off("start-game", handleStartGame);
+			socket.off("location-assigned");
 			socket.off("round-time", handleRoundTime);
 			socket.off("vote-start", handleVote);
 			socket.off("vote-kick");
@@ -126,11 +140,12 @@ export default function Roompage() {
 	return (
 		<>
 			<h2>Комната #{roomID}</h2>
-			{!isGameOver && (isPlaying ? (
-				<span className="green">Игра идёт</span>
-			) : (
-				<span className="red">Ожидание</span>
-			))}
+			{!isGameOver &&
+				(isPlaying ? (
+					<span className="green">Игра идёт</span>
+				) : (
+					<span className="red">Ожидание</span>
+				))}
 			{/* {isPlaying ? (
 				<span className="green">Игра идёт</span>
 			) : (
@@ -164,10 +179,17 @@ export default function Roompage() {
 				</button>
 			)}
 
-			{isPlaying && <Card role={playerRole} />}
-			{playerRole === "spy" ? <button>Я знаю место</button> : null}
+			{isPlaying && dataLocation &&(
+				<Card
+					role={playerRole}
+					location={dataLocation.location}
+					place={dataLocation.place}
+				/>
+			)}
 
-			{isPlaying && (
+			{playerRole === "spy" ? <button >Я знаю место</button> : null}
+
+			{!isGameOver && isPlaying && (
 				<button onClick={handleVoteReady} disabled={isVote ? true : false}>
 					Я знаю кто шпион
 				</button>

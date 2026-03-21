@@ -14,7 +14,7 @@ export default function Loginpage() {
 		e.preventDefault();
 
 		if (!username.trim()) return alert("Введите имя !");
-
+		sessionStorage.setItem('username',username)
 		socket.emit("join", { username: username });
 	};
 

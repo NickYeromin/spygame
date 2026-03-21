@@ -37,6 +37,7 @@
 	/* background: black; */
 	color: white;
 	transform: rotateY(180deg);
+	position: relative;
 }
 .card-inner img {
 	height: 100%;
@@ -44,4 +45,15 @@
 	object-fit: contain;
 	/* border: 3px solid white; */
 	border-radius: 25px;
+}
+
+.card-title {
+	position: absolute;
+	bottom: 20px;
+	color: goldenrod;
+	font-weight: bold;
+	-webkit-text-stroke: 1px black;
+	/* text-shadow:
+		2px 2px 0 black,
+		-2px -2px 0 black; */
 }

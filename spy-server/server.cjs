@@ -4,6 +4,7 @@ const readline = require("readline");
 const { Server } = require("socket.io");
 const { createServer } = require("http");
 const genCards = require("./module/genCards");
+const genPlaceLocation = require("./module/genPlaceLocation");
 const { socket } = require("../../Spy test/src/components/socket");
 
 const app = express();
@@ -111,6 +112,7 @@ io.on("connection", (socket) => {
 				numberSpy,
 				roundTime: timeRound,
 				location,
+				place_location: null,
 				gameState: "waiting",
 				countdownTimer: null,
 				roundTimer: null,
@@ -288,7 +290,11 @@ function startGame(roomID) {
 	if (!room) return;
 
 	room.gameState = "playing";
-
+	room.place_location = genPlaceLocation(room.location);
+	io.to(roomID).emit("location-assigned", {
+		location: room.location,
+		place: room.place_location,
+	});
 	// перемешка игроков
 	const shuffled = [...room.players].sort(() => Math.random() - 0.5);
 	const cards = genCards(room.numberPlayers, room.numberSpy);

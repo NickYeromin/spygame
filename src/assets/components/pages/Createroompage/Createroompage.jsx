@@ -113,10 +113,10 @@ export default function Createroompage() {
 						onChange={(e) => setLocation(e.target.value)}
 					>
 						<option value="school">Школа</option>
-						<option value="room">Помещения</option>
-						<option value="tower">Небоскреб</option>
-						<option value="metro">Метро</option>
-						<option value="island">Безлюдный остров</option>
+						{/* <option value="room">Помещения</option> */}
+						{/* <option value="tower">Небоскреб</option> */}
+						{/* <option value="metro">Метро</option> */}
+						{/* <option value="island">Безлюдный остров</option> */}
 					</select>
 				</label>
 
