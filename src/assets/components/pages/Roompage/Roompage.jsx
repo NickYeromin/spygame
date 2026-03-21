@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { socket } from "../../api/socket";
 import "./Roompage.css";
@@ -17,6 +17,8 @@ export default function Roompage() {
 	const [currentPlayers, setCurrentPlayers] = useState([]);
 	const [message, setMessage] = useState(""); //!
 	const [isGameOver, setIsGameOver] = useState(false);
+	const [spyOptions, setSpyOptions] = useState([]);
+	const [isSpyAttempt, setIsSpyAttempt] = useState(false);
 
 	const { roomID } = useParams();
 	const username = sessionStorage.getItem("username");
@@ -50,6 +52,15 @@ export default function Roompage() {
 	const handleVoteSelectPlayer = (playerID) => {
 		socket.emit("vote-select", { roomID, playerID });
 		setIsVote(false);
+	};
+
+	const handleSpyAttempt = () => {
+		socket.emit("spy-attempt", roomID);
+		setIsSpyAttempt(true);
+	};
+
+	const handleSelectSpy = (place) => {
+		socket.emit("select-spy", { roomID, place });
 	};
 
 	const formatTime = (seconds) => {
@@ -93,13 +104,10 @@ export default function Roompage() {
 		socket.on("round-time", handleRoundTime);
 		socket.on("location-assigned", (data) => {
 			setDataLocation(data);
-			console.log(data);
-		}); //!
+		});
 		socket.on("role-assigned", handlePlayerRole);
 		socket.on("vote-start", handleVote);
 		socket.on("vote-kick", (data) => {
-			//Если я тогда...
-			console.log("Ирок выгнан!", data);
 			if (data === username) {
 				setIsGameOver(true);
 				alert(`Результат голосования! \n ${data}, вы выбываете!`);
@@ -120,8 +128,12 @@ export default function Roompage() {
 			alert(message);
 			setIsGameOver(true);
 		});
-
-		// 🔥 правильный запрос игроков
+		socket.on("spy-options", (data) => {
+			setSpyOptions(data);
+		});
+		socket.on("spy-message", (message) => {
+			alert(message);
+		});
 		socket.emit("get-room-players", { roomID });
 
 		return () => {
@@ -146,11 +158,7 @@ export default function Roompage() {
 				) : (
 					<span className="red">Ожидание</span>
 				))}
-			{/* {isPlaying ? (
-				<span className="green">Игра идёт</span>
-			) : (
-				<span className="red">Ожидание</span>
-			)} */}
+
 			{isGameOver && <span className="red">Игра окончена!</span>}
 			<br />
 
@@ -179,7 +187,7 @@ export default function Roompage() {
 				</button>
 			)}
 
-			{isPlaying && dataLocation &&(
+			{isPlaying && dataLocation && (
 				<Card
 					role={playerRole}
 					location={dataLocation.location}
@@ -187,7 +195,20 @@ export default function Roompage() {
 				/>
 			)}
 
-			{playerRole === "spy" ? <button >Я знаю место</button> : null}
+			{playerRole === "spy" ? (
+				<button onClick={handleSpyAttempt}>Я знаю место</button>
+			) : null}
+			{isSpyAttempt &&
+				spyOptions.map((option) => (
+					<button
+						key={option.place}
+						onClick={() => {
+							handleSelectSpy(option.place);
+						}}
+					>
+						{option.title}
+					</button>
+				))}
 
 			{!isGameOver && isPlaying && (
 				<button onClick={handleVoteReady} disabled={isVote ? true : false}>

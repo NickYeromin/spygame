@@ -233,10 +233,6 @@ io.on("connection", (socket) => {
 					(player) => player.role === "player",
 				).length;
 
-				console.log(
-					`numPlayers:${currNumberPlayers} | currSpy:${currSpy} | currPlayers:${currPlayers}`,
-				);
-
 				if (currSpy === 0 && currPlayers > 1) {
 					console.log(`Room #${roomID} game over! Players win`);
 					room.gameState = "game-over";
@@ -259,6 +255,97 @@ io.on("connection", (socket) => {
 				console.log("Игроки не смогли определиться кого выгнать.");
 			}
 		}
+	});
+
+	socket.on("spy-attempt", (roomID) => {
+		const room = rooms[roomID];
+		if (!room) return;
+
+		const username = users[socket.id];
+		if (!username) return socket.emit("room-error", "Вы не авторизованы!");
+
+		const player = room.players.find((p) => p.id === socket.id);
+		if (!player) return socket.emit("room-error", "Игрок не найден в комнате!");
+
+		let places = [];
+
+		switch (room.location) {
+			case "school":
+				places = [
+					{ place: "assembly_room", title: "Актовый зал" },
+					{ place: "chemistry_room", title: "Кабинет химии" },
+					{ place: "computer_room", title: "Компьютерный класс" },
+					{ place: "corridor", title: "Коридор" },
+					{ place: "dining_room", title: "Столовая" },
+					{ place: "director_room", title: "Кабинет директора" },
+					{ place: "dressing_room", title: "Раздевалка" },
+					{ place: "liblary_room", title: "Библиотека" },
+					{ place: "literature_room", title: "Кабинет литературы" },
+					{ place: "math_room", title: "Кабинет математики" },
+					{ place: "medic_room", title: "Медпункт" },
+					{ place: "museum_room", title: "Музей" },
+					{ place: "music_room", title: "Музыкальный класс" },
+					{ place: "phisic_room", title: "Кабинет физики" },
+					{ place: "sport_room", title: "Спортзал" },
+					{ place: "teacher_room", title: "Учительская" },
+					{ place: "toilet_room", title: "Туалет" },
+				];
+				break;
+			default:
+				console.log("Локация не найдена");
+				break;
+		}
+
+		io.to(socket.id).emit("spy-options", places);
+	});
+
+	socket.on("select-spy", ({ roomID, place }) => {
+		const room = rooms[roomID];
+		if (!room) return;
+
+		const username = users[socket.id];
+		if (!username) return socket.emit("room-error", "Вы не авторизованы!");
+
+		const player = room.players.find((p) => p.id === socket.id);
+		if (!player) return socket.emit("room-error", "Игрок не найден в комнате!");
+
+		if (room.place_location === place) {
+			room.gameState = "game-over";
+			io.to(roomID).emit("game-over", "Игра окончена! \n Шпион угадал место!");
+		} else {
+			room.players = room.players.filter(
+				(player) => player.username !== username,
+			);
+			io.to(roomID).emit(
+				"spy-message",
+				`Шпион не угадал место, и был выгнан. \n ${username}, пока!`,
+			);
+
+			const currNumberPlayers = room.players.length;
+				const currSpy = room.players.filter(
+					(player) => player.role === "spy",
+				).length;
+				const currPlayers = room.players.filter(
+					(player) => player.role === "player",
+				).length;
+
+				if (currSpy === 0 && currPlayers > 1) {
+					console.log(`Room #${roomID} game over! Players win`);
+					room.gameState = "game-over";
+					io.to(roomID).emit("game-over", 'Игра окончена! \n Победа "Игроки"');
+				} else if (currSpy === 1 && currPlayers === 1) {
+					console.log(`Room #${roomID} game over! Spy win`);
+					room.gameState = "game-over";
+					io.to(roomID).emit("game-over", 'Игра окончена! \n Победа "Шпионы"');
+				} else if (currSpy > currPlayers) {
+					console.log(`Room #${roomID} game over! Spy win`);
+					room.gameState = "game-over";
+					io.to(roomID).emit("game-over", 'Игра окончена! \n Победа "Шпионы"');
+				}
+
+			
+		}
+		console.log(place);
 	});
 });
 
@@ -332,9 +419,6 @@ function votePlayers(roomID) {
 	const currentPlayers = room.players;
 	const midleVotes = Math.round(currentPlayers.length / 2);
 	const readyVote = room.players.filter((p) => p.voteReady).length;
-	// console.log(
-	// 	`currPlayers->${currentPlayers.length}	|	midleVoters->${midleVotes}	|	readyVote->${readyVote}`,
-	// );
 	for (const player of currentPlayers) {
 		room.votePlayers[player.username] = 0;
 	}
