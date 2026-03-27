@@ -1,16 +1,56 @@
-# React + Vite
+# 🔫🤠 Spy Game
+## 🚀About the Project
+**Spy Game** is an electronic version of the classic card game "Spy".
+There are two roles: players and a spy.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The goal for the players is to identify who the spy is, while the spy’s task is to guess the hidden location without revealing their identity.
 
-Currently, two official plugins are available:
+## 💬 Comunication players
+Communication between players is not provided within the game, therefore:
+Players communicate with each other either in real life (in the same room, offline) or online using any messenger with voice call support.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## ▶ Demo
+<p align="center">
+  <img src="Spy DEMO/1.png" width="500" />
+    <img src="Spy DEMO/2.png" width="500" />
+    <img src="Spy DEMO/3.png" width="500" />
+    <img src="Spy DEMO/4.png" width="500" />
+    <img src="Spy DEMO/5.png" width="500" />
+    <img src="Spy DEMO/6.png" width="500" />
+    <img src="Spy DEMO/7.png" width="500" />
+</p>
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 📦 Technologies
+### 🌕Front-End (client)
+- **HTML5 + React** - interface wich user
+- **CSS3** — UI styling and layout
+- **JavaScript** - managing local state and handling socket connection
+- **Socket.io** - real-time data exchange between clients
 
-## Expanding the ESLint configuration
+### 🌕Back-End (client)
+- **Node.js + Express.js** - server and API handling
+- **Socket.io** - real-time communication between server and clients
+- **JavaScript** - game logic implementation
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+  
+  ---
+  
+## 🛠️ Installation and Run Project
+```bash
+# Clone the repository
+git clone https://github.com/NickYeromin/spygame/.git
+
+# Installing dependencies
+npm init -y
+npm install ws
+
+# Run project server
+node spy-server/server.cjs
+
+# Run project client
+npm run dev  -- --host
+
+# All commands to run from the root folder of the project
+# ⚠️ Before running the client, make sure to set the correct server address in api/socket.js
