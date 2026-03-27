@@ -151,12 +151,12 @@ export default function Roompage() {
 
 	return (
 		<>
-			<h2>Комната #{roomID}</h2>
+			<h2 className="room-number">Комната #{roomID}</h2>
 			{!isGameOver &&
 				(isPlaying ? (
-					<span className="green">Игра идёт</span>
+					<span className="green rubik-mono-one-regular">Игра идёт</span>
 				) : (
-					<span className="red">Ожидание</span>
+					<span className="red rubik-mono-one-regular">Ожидание</span>
 				))}
 
 			{isGameOver && <span className="red">Игра окончена!</span>}
@@ -167,22 +167,36 @@ export default function Roompage() {
 			)}
 
 			{!isGameOver && isPlaying && roundTime !== null && (
-				<span className="green">Осталось времени: {formatTime(roundTime)}</span>
+				<span className="green press-start-2p-regular">
+					Осталось времени: {formatTime(roundTime)}
+				</span>
 			)}
 
-			{!isPlaying && <h3>Игроки:</h3>}
+			{!isPlaying && <h3 className="rubik-mono-one-regular">Игроки:</h3>}
 			{!isPlaying && (
-				<ul>
+				<ul className="player-list">
 					{roomPlayers.map((player) => (
-						<li key={player.id} className={player.ready ? "green" : "red"}>
-							{player.username}
+						<li key={player.id} className="player-card">
+							<span className="player-name">{player.username}</span>
+							<span
+								className={`player-status ${player.ready === true ? "online" : "offline"}`}
+							>
+								{player.ready === true ? "ГОТОВ" : "ОЖИДАНИЕ"}
+							</span>
 						</li>
+						// <li
+
+						// 	key={player.id}
+						// 	className={`li press-start-2p-regular ${player.ready ? "green" : "red"}`}
+						// >
+						// 	{player.username}
+						// </li>
 					))}
 				</ul>
 			)}
 
 			{!isPlaying && (
-				<button onClick={handleReady}>
+				<button className="btn-st" onClick={handleReady}>
 					{isReady ? "Отменить готовность" : "Готов"}
 				</button>
 			)}
@@ -195,37 +209,49 @@ export default function Roompage() {
 				/>
 			)}
 
-			{playerRole === "spy" ? (
-				<button onClick={handleSpyAttempt}>Я знаю место</button>
+			{!isGameOver && playerRole === "spy" ? (
+				<button className="btn-st" onClick={handleSpyAttempt}>
+					Я знаю место
+				</button>
 			) : null}
-			{isSpyAttempt &&
-				spyOptions.map((option) => (
-					<button
-						key={option.place}
-						onClick={() => {
-							handleSelectSpy(option.place);
-						}}
-					>
-						{option.title}
-					</button>
-				))}
+			{isSpyAttempt && (
+				<div className="vote-panel">
+					{spyOptions.map((option) => (
+						<button className="vote-option"
+							key={option.place}
+							onClick={() => {
+								handleSelectSpy(option.place);
+							}}
+						>
+							{option.title}
+						</button>
+					))}
+				</div>
+			)}
 
-			{!isGameOver && isPlaying && (
-				<button onClick={handleVoteReady} disabled={isVote ? true : false}>
+			{!isGameOver && isPlaying && !isVote && (
+				<button
+					className="btn-st"
+					onClick={handleVoteReady}
+					disabled={isVote ? true : false}
+				>
 					Я знаю кто шпион
 				</button>
 			)}
 
-			{isVote &&
-				currentPlayers.map((player) => (
-					<div key={player.id}>
-						{" "}
-						<span>{player.username}</span>{" "}
-						<button onClick={() => handleVoteSelectPlayer(player.id)}>
-							Выбрать
-						</button>{" "}
-					</div>
-				))}
+			{isVote && (
+				<div className="vote-panel">
+					<h3>Голосование</h3>
+					{currentPlayers.map((player) => (
+						<div className="vote-option">
+							<span className="">{player.username}</span>
+							<button onClick={() => handleVoteSelectPlayer(player.id)}>
+								Выбрать
+							</button>
+						</div>
+					))}
+				</div>
+			)}
 		</>
 	);
 }

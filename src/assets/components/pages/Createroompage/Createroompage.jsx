@@ -57,15 +57,15 @@ export default function Createroompage() {
 	return (
 		<>
 			<Logo />
-			<h2>Создание комнаты</h2>
+			<h2 className="press-start-2p-regular">Создание комнаты</h2>
 
-			<form className="create-room-form" onSubmit={handleCreateRoom}>
+			<form className="create-room-form box" onSubmit={handleCreateRoom}>
 				<label>
 					Код комнаты:
 					<input
 						type="text"
 						value={roomID}
-						placeholder="Например: 1234"
+						placeholder="Пример: 1234"
 						onChange={(e) => setRoomID(e.target.value)}
 					/>
 				</label>
@@ -120,7 +120,7 @@ export default function Createroompage() {
 					</select>
 				</label>
 
-				<button type="submit">Создать</button>
+				<button className="btn-st" type="submit">Создать</button>
 			</form>
 		</>
 	);

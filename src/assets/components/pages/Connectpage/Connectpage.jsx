@@ -41,14 +41,14 @@ export default function Connectpage() {
 	return (
 		<>
 			<Logo />
-			<form onSubmit={handlerConnect}>
+			<form className="box" onSubmit={handlerConnect}>
 				<input
 					type="text"
 					placeholder="Введите код комнаты"
 					value={roomID}
 					onChange={(e) => setRoomID(e.target.value)}
 				/>
-				<button type="submit">Подключиться</button>
+				<button className="btn-st" type="submit">Подключиться</button>
 			</form>
 		</>
 	);

@@ -14,7 +14,7 @@ export default function Loginpage() {
 		e.preventDefault();
 
 		if (!username.trim()) return alert("Введите имя !");
-		sessionStorage.setItem('username',username)
+		sessionStorage.setItem("username", username);
 		socket.emit("join", { username: username });
 	};
 
@@ -39,14 +39,19 @@ export default function Loginpage() {
 	return (
 		<>
 			<Logo />
-			<form onSubmit={handleLogin}>
+			<form className="box" onSubmit={handleLogin}>
 				<input
+					className="el-standard"
 					type="text"
 					placeholder="Введите имя"
 					value={username}
 					onChange={(e) => setUsername(e.target.value)}
 				/>
-				<button type="submit" disabled={!username.trim()}>
+				<button
+					className="el-standard btn-st"
+					type="submit"
+					disabled={!username.trim()}
+				>
 					Играть
 				</button>
 			</form>
